@@ -5,8 +5,7 @@ is licensed under a Creative Commons Attribution 4.0 Internacional License.
 
 ARDUINO CODE
 
-Copyright (c) 2017 Oskar Casquero (oskar.casquero@ehu.eus) 
-at University of the Basque Country (http://www.ehu.eus)
+Copyright (c) 2017 Oskar Casquero (oskar.casquero@ehu.eus)
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
