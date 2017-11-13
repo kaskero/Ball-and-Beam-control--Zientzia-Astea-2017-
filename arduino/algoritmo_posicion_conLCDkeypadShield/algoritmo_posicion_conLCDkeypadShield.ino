@@ -90,7 +90,7 @@ void loop() {
     } else if(button > 900 && button < 1000) {
       Serial.println(button);
       select_button_pushed = true;
-      while(select_button_pushed && analogRead(0)>900 && analogRead(0)<1000) { delay(1000); }
+      while(select_button_pushed && analogRead(0)>900 && analogRead(0)<1000) { delay(1500); }
       select_button_pushed = false;
       option++;
       if(option == 1) { myPID.Kp = 15.00, myPID.Ki = 0.00, myPID.Kd = 0.00; }
@@ -105,6 +105,9 @@ void loop() {
   last_time = millis();
 
   if(flag) {
+    delay(500);
+    OCR5A = 2400; // 2 * (2400 * 0.5us) = 2.4ms  --> 180º
+    
     myPID.e_1 = 0.0;
     myPID.iError = 0.0;
     flag = 0;
@@ -194,12 +197,11 @@ void visualize_data(double input, double error) {
 }
 
 ISR(TIMER2_COMPA_vect) {
-  if(timer2_overflow == 1829) {
+  if(timer2_overflow == 1222) {
     //Serial.println((micros()-t)/1000000.0, 1);
     //t = micros();
     
-    if(setpoint == 30) setpoint = 20;
-    else if(setpoint == 20) setpoint = 30;
+    OCR5A = 545; // 2 * (545 * 0.5us) = 0.545ms --> 0º
 
     flag = true;
     
@@ -254,7 +256,7 @@ void configure_Timer2() {
   // Timer2 clk/1024 --> t_BIT_TCNT2: 1 / (16*10^6 / 1024) = 64us
   // OCR2A? --> OCR2A * 64us = 1s --> OCR2A = 15625
   // OCR2A 8bit-eko erregistroa da... --> 15625 / 255 = 61 --> 1s
-  //                                                  1830 --> 30s
+  //                                                  1220 --> 20s
   
   // Table 20-8. Waveform Generation Mode Bit Description
   // Mode WGM22 WGM21 WGM20 Timer/Counter_Mode_of_Operation  TOP
