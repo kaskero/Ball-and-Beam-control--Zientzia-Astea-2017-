@@ -27,8 +27,8 @@ volatile bool flag = 0;
 struct PID_data {
   float Ts = 60;
   double Kp = 15.00,
-         Ki = 3.00,
-         Kd = 25.00;
+         Ki = 5.00,
+         Kd = 20.00;
   double e_1 = 0.0;
   double iError = 0.0,
          dError = 0.0;
