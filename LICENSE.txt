@@ -1,6 +1,6 @@
 3D PRINTS
 
-Ball & Beam control (3D prints) by Joseba Sainz de Murieta (joseba.sainzdemurieta@ehu.eus) is licensed under a Creative Commons Attribution 4.0 Internacional License.
+Ball-and-Beam-control--Zientzia-Astea-2017- (3D prints) by Joseba Sainz de Murieta (joseba.sainzdemurieta@ehu.eus) is licensed under a Creative Commons Attribution 4.0 Internacional License.
 
 ARDUINO CODE
 
