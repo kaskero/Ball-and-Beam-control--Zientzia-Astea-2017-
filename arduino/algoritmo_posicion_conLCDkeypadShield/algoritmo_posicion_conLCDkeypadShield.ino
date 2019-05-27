@@ -114,14 +114,13 @@ void loop() {
   }
    
   sample_array_sum -= sample_array[0];
-  
   // shift circular buffer as FIFO
   for(int i=1; i<sample_num; i++) {
     sample_array[i-1] = sample_array[i];
   }
-  
   sample_array[sample_num-1] = analogRead(sensor_pin);
   sample_array_sum += sample_array[sample_num-1];
+  
   float ADC_mean_value = sample_array_sum / sample_num;
   float estimated_voltage = ADC_mean_value * (3.3 / 1024);
 
