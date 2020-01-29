@@ -214,6 +214,45 @@ ISR(TIMER2_OVF_vect) {
   TIMSK2 |= 1<<TOIE2; // Timer/Counter2 Overflow Interrupt Enable
 }
 
+void configure_Timer2() {
+  cli();
+
+  // Documentación referida a datasheet ATmega2540
+  
+  // Timer2 (TCNT2) denboragailuaren zenbaketa abiadura:
+  // clk/prescaler --> clk/1024 --> t_BIT_TCNT2: 1 / (16*10^6 / 1024) = 64us
+  // TCNT2-a 1s kontatzeko erabili daiteke? --> TCNT2 * 64us = 1s --> TCNT2 = 15625
+  // TCNT2 8bit-eko erregistroa da --> 255-eraino konta dezake
+  // 15625 / 256 = 61.03 --> TCNT2-ak 61 aldiz gainezka egiten badu, 1s pasa direla adierazten du
+    
+  // Table 20-8. Waveform Generation Mode Bit Description
+  // Mode WGM22 WGM21 WGM20 Timer/Counter_Mode_of_Operation  TOP
+  // 0    0     0     0     Normal                           0xFF
+  
+  // 20.10.1 TCCR2A – Timer/Counter2 Control Register A
+  // COM2A1 COM2A0 COM2B1 COM2B0 X X WGM21 WGM20
+  // Table 20-2. Compare Output Mode, non-PWM
+  // COM2A1 COM2A0 Description
+  // 0      0      Normal port operation, OC2A disconnected
+  TCCR2A &= (~(_BV(COM2A1)) & ~(_BV(COM2A0)));
+  TCCR2A &= (~(_BV(WGM21)) & ~(_BV(WGM20)));
+  
+  // 20.10.2 TCCR2B – Timer/Counter1 Control Register B
+  // X X - - WGM22 CS22 CS21 CS20
+  TCCR2B &= ~(_BV(WGM22));
+  
+  // Table 20-9. Clock Select Bit Description
+  // CS22 CS21 CS20 Description
+  // 1    1    1    clk/1024
+  TCCR2B |= (_BV(CS22) | _BV(CS21) | _BV(CS20));
+
+  TCNT2 = 0;
+  // 20.10.7 TIMSK2 – Timer/Counter2 Interrupt Mask Register
+  TIMSK2 |= 1<<TOIE2; // Timer/Counter2 Overflow Interrupt Enable
+  
+  sei();
+}
+
 void configure_Timer5() {
   // Comments from ATmega328 datasheet referred to Timer1
   //
@@ -252,43 +291,4 @@ void configure_Timer5() {
   OCR5A = 545; // 2 * (545 * 0.5us) = 0.545ms --> 0º
   delay(1000);
   OCR5A = 2400; // 2 * (2400 * 0.5us) = 2.4ms  --> 180º
-}
-
-void configure_Timer2() {
-  cli();
-
-  // Documentación referida a datasheet ATmega2540
-  
-  // Timer2 (TCNT2) denboragailuaren zenbaketa abiadura:
-  // clk/prescaler --> clk/1024 --> t_BIT_TCNT2: 1 / (16*10^6 / 1024) = 64us
-  // TCNT2-a 1s kontatzeko erabili daiteke? --> TCNT2 * 64us = 1s --> TCNT2 = 15625
-  // TCNT2 8bit-eko erregistroa da --> 255-eraino konta dezake
-  // 15625 / 256 = 61.03 --> TCNT2-ak 61 aldiz gainezka egiten badu, 1s pasa direla adierazten du
-    
-  // Table 20-8. Waveform Generation Mode Bit Description
-  // Mode WGM22 WGM21 WGM20 Timer/Counter_Mode_of_Operation  TOP
-  // 0    0     0     0     Normal                           0xFF
-  
-  // 20.10.1 TCCR2A – Timer/Counter2 Control Register A
-  // COM2A1 COM2A0 COM2B1 COM2B0 X X WGM21 WGM20
-  // Table 20-2. Compare Output Mode, non-PWM
-  // COM2A1 COM2A0 Description
-  // 0      0      Normal port operation, OC2A disconnected
-  TCCR2A &= (~(_BV(COM2A1)) & ~(_BV(COM2A0)));
-  TCCR2A &= (~(_BV(WGM21)) & ~(_BV(WGM20)));
-  
-  // 20.10.2 TCCR2B – Timer/Counter1 Control Register B
-  // X X - - WGM22 CS22 CS21 CS20
-  TCCR2B &= ~(_BV(WGM22));
-  
-  // Table 20-9. Clock Select Bit Description
-  // CS22 CS21 CS20 Description
-  // 1    1    1    clk/1024
-  TCCR2B |= (_BV(CS22) | _BV(CS21) | _BV(CS20));
-
-  TCNT2 = 0;
-  // 20.10.7 TIMSK2 – Timer/Counter2 Interrupt Mask Register
-  TIMSK2 |= 1<<TOIE2; // Timer/Counter2 Overflow Interrupt Enable
-  
-  sei();
 }
