@@ -54,7 +54,7 @@ void setup() {
   lcd.print("DISA UPV/EHU");
   delay(3000);
 
-  pinMode(ppm_pin, OUTPUT); //OC5A
+  pinMode(ppm_pin, OUTPUT); // OC5A
   configure_Timer5(); // PPM
 
   pinMode(sensor_pin, INPUT);
@@ -195,7 +195,9 @@ void visualize_data(double input, double error) {
   lcd.print("E:"); lcd.print(error, 1);
 }
 
-ISR(TIMER2_COMPA_vect) {
+ISR(TIMER2_OVF_vect) {
+  TIMSK2 &= ~(1<<TOIE2); // Timer/Counter2 Overflow Interrupt Disable
+  
   if(timer2_overflow == 1222) {
     //Serial.println((micros()-t)/1000000.0, 1);
     //t = micros();
@@ -208,14 +210,17 @@ ISR(TIMER2_COMPA_vect) {
   } else {
     timer2_overflow++;
   }
+
+  TIMSK2 |= 1<<TOIE2; // Timer/Counter2 Overflow Interrupt Enable
 }
 
 void configure_Timer5() {
-  // Comments from ATmega328 datasheet
+  // Comments from ATmega328 datasheet referred to Timer1
   //
   // Table 16-4. Waveform Generation Mode Bit Description
   // Mode WGM13 WGM12 WGM11 WGM10 Timer/Counter_Mode_of_Operation  TOP
   // 8    1     0     0     0     PWM, Phase and Frequency Correct ICR1
+  // Con ICR1 (Input Capture Register) vamos a controlar el periodo de la PWM (t_PWM)
     
   // 16.11.1 TCCR1A – Timer/Counter1 Control Register A
   // COM1A1 COM1A0 COM1B1 COM1B0 - - WGM11 WGM10
@@ -224,6 +229,7 @@ void configure_Timer5() {
   // COM1A1/COM1B1 COM1A0/COM1B0 Description
   //       1             0       Clear OC1A/OC1B on Compare Match when upcounting.
   //                             Set OC1A/OC1B on Compare Match when downcounting.
+  // Con OCR1A vamos a establecer el t_ON de la PWM
   TCCR5A |= _BV(COM5A1);
   TCCR5A &= ~(_BV(COM5A0));
   TCCR5A &= (~(_BV(WGM51)) & ~(_BV(WGM50)));
@@ -250,13 +256,15 @@ void configure_Timer5() {
 
 void configure_Timer2() {
   cli();
-  // Comments from ATmega2540 datasheet
-  //
-  // Timer2 clk/1024 --> t_BIT_TCNT2: 1 / (16*10^6 / 1024) = 64us
-  // OCR2A? --> OCR2A * 64us = 1s --> OCR2A = 15625
-  // OCR2A 8bit-eko erregistroa da... --> 15625 / 255 = 61 --> 1s
-  //                                                  1220 --> 20s
+
+  // Documentación referida a datasheet ATmega2540
   
+  // Timer2 (TCNT2) denboragailuaren zenbaketa abiadura:
+  // clk/prescaler --> clk/1024 --> t_BIT_TCNT2: 1 / (16*10^6 / 1024) = 64us
+  // TCNT2-a 1s kontatzeko erabili daiteke? --> TCNT2 * 64us = 1s --> TCNT2 = 15625
+  // TCNT2 8bit-eko erregistroa da --> 255-eraino konta dezake
+  // 15625 / 256 = 61.03 --> TCNT2-ak 61 aldiz gainezka egiten badu, 1s pasa direla adierazten du
+    
   // Table 20-8. Waveform Generation Mode Bit Description
   // Mode WGM22 WGM21 WGM20 Timer/Counter_Mode_of_Operation  TOP
   // 0    0     0     0     Normal                           0xFF
@@ -279,7 +287,8 @@ void configure_Timer2() {
   TCCR2B |= (_BV(CS22) | _BV(CS21) | _BV(CS20));
 
   TCNT2 = 0;
-  TIMSK2 |= 1<<OCIE2A;
+  // 20.10.7 TIMSK2 – Timer/Counter2 Interrupt Mask Register
+  TIMSK2 |= 1<<TOIE2; // Timer/Counter2 Overflow Interrupt Enable
   
   sei();
 }
